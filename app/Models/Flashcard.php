@@ -10,6 +10,11 @@ class Flashcard extends Model
     use HasFactory;
 
     protected $fillable = [
-      'question', 'answer'
+        'question', 'answer'
     ];
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class)->withTimestamps()->withPivot(['answer', 'is_correct']);
+    }
 }

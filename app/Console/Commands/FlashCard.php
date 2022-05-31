@@ -106,16 +106,25 @@ class FlashCard extends Command
             $option = $this->choice("Please select an option from the list below", $mainMenu);
 
             match ($option) {
-                "Create a flashcard" => [
-                    $question = $this->Input("Enter flashcard question"), // Get question
-                    $answer = $this->Input("Answer"), // Get answer
-
-                    // create a new flashcard
-                    $this->flashcardService->create($question, $answer),
-                    ],
+                "Create a flashcard" => $this->createNewFlashcard(),
                 "List all flashcards" => $this->getAllFlashcards(),
+                "Practice" => $this->practicing(),
+                "Stats" => $this->getStats(),
+                "Reset" => $this->reset(),
+
+
             };
         } while ($option !== "Exit");
+    }
+
+    private function createNewFlashcard()
+    {
+        // Get the question & the answer from the user
+        $question = $this->Input("Enter flashcard question");
+        $answer = $this->Input("Answer");
+
+        // create a new flashcard
+        $this->flashcardService->create($question, $answer);
     }
 
     private function getAllFlashcards()
@@ -138,6 +147,92 @@ class FlashCard extends Command
         );
     }
 
+    private function practicing()
+    {
+        $flashcards = $this->flashcardService->fetchStats($this->user->id);
 
+        $dd = $this->flashcardService->showFlashcardsWithStats($flashcards);
+
+        if (is_array($dd)) {
+            $this->generateTable(
+                $dd['flashcards'],
+                $dd['flashcard'],
+                $dd["style"],
+                $dd['title']
+            );
+        }
+
+
+        $this->info($dd['message']);
+
+
+
+        // If flashcards are empty, then break
+        if (empty($flashcards)) {
+            return;
+        }
+
+        // check if all flashcards are answered correctly
+        if ($this->flashcardService->isCorrect($flashcards)) {
+            $this->info(
+                "All flashcards already answered"
+            );
+            return;
+        }
+
+        $flashcardId = $this->Input(
+            "Enter flashcard id"
+        );
+
+        $flashcard = $this->flashcardService->fetchFlashcardById(
+            $flashcards,
+            $flashcardId
+        );
+
+        if (empty($flashcard)) {
+            $this->error("invalid id given.");
+        } elseif ($flashcard["is_correct"] === "Correct") {
+            $this->error("Flashcard already answered correctly.");
+        } else {
+            $answer = $this->Input($flashcard["question"]);
+            $isCorrectAnswer = $this->flashcardService->validateAnswer(
+                $flashcardId,
+                $answer,
+                $this->user->id
+            );
+            $this->info(
+                $isCorrectAnswer
+                    ? "Correct Answer"
+                    : "Incorrect Answer"
+            );
+        }
+    }
+
+    private function getStats()
+    {
+        // Get flashcard stats for this user
+        $flashcards = $this->flashcardService->fetchStats($this->user->id);
+
+        $dd = $this->flashcardService->showFlashcardsWithStats($flashcards);
+
+        if (is_array($dd)) {
+            $this->generateTable(
+                $dd['flashcards'],
+                $dd['flashcard'],
+                $dd["style"],
+                $dd['title']
+            );
+        }
+
+
+        $this->info($dd['message']);
+    }
+
+    private function reset()
+    {
+        // Delete the answers for the logged user
+        $this->flashcardService->reset($this->user);
+        $this->info("All the answers have been deleted!");
+    }
 
 }
