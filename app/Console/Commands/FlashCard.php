@@ -80,6 +80,7 @@ class FlashCard extends Command
                 // start the app
                 $this->startFlashCard(),
             ],
+            default => []
             };
 
 
@@ -111,6 +112,7 @@ class FlashCard extends Command
                 "Practice" => $this->practicing(),
                 "Stats" => $this->getStats(),
                 "Reset" => $this->reset(),
+                default => [],
 
 
             };
