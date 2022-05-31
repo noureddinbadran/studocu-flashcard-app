@@ -48,7 +48,7 @@ class FlashCard extends Command
 
         $option = null;
 
-//        do {
+        do {
             $this->newLine(4);
             $this->alert("Welcome to Flashcard App - With this App you can learn & practice anytime!");
             $option = $this->choice("Select an option please!", $authMenu);
@@ -84,7 +84,7 @@ class FlashCard extends Command
             };
 
 
-//        } while ($option !== "Exit");
+        } while ($option !== "Exit");
 
         return Command::SUCCESS;
     }
