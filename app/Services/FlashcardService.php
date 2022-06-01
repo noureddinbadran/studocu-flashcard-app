@@ -12,32 +12,37 @@ class FlashcardService extends BaseService
     }
 
     /**
-     * Create new flashcard
+     * Create a new flashcard
      *
      * @param string $question
      * @param string $answer
-     * @return void
+     * @return bool
      *
      */
-    public function create(string $question, string $answer): void
+    public function create(string $question, string $answer): bool
     {
+        if(!$question || !$answer)
+            return false;
+
         $this->model->create([
             'question' => trim($question),
             'answer' => trim($answer)
         ]);
+
+        return true;
     }
 
     /**
-     * Fetch all flashcards
+     * get all flashcards
      *
      * @return array
      */
-    public function fetch(): array
+    public function getFlashcardsList(): array
     {
         return Flashcard::all("id", "question", "answer")->toArray();
     }
 
-    public function fetchStats($user_id): array
+    public function getStats($user_id): array
     {
         // Get stats from DB for the given user
         $flashcards = Flashcard::leftJoin("flashcard_user", function ($join) use ($user_id) {
@@ -47,7 +52,7 @@ class FlashcardService extends BaseService
             ->select("flashcards.id", "question", "is_correct")
             ->get()
             ->toArray();
-        // $questions = Question::with('answers')->get()->toArray();
+
         foreach ($flashcards as $key => $flashcard) {
             if ($flashcard["is_correct"] === null) {
                 $flashcards[$key]["is_correct"] = "Not answered";
@@ -65,13 +70,12 @@ class FlashcardService extends BaseService
      * Display flash card with status
      *
      * @param  array $flashcards
-     * @return void
+     * @return array
      */
 
     public function showFlashcardsWithStats(array $flashcards): array
     {
         $response = "";
-        // print_r($flashcards);
         if (count($flashcards)) {
             $total = count($flashcards);
             $correct = 0;
@@ -86,8 +90,8 @@ class FlashcardService extends BaseService
             }
 
             $title = "Total: " . $total;
-            $title .= ", Correct: " . $correct;
-            $title .= ", Inorrect: " . $incorrect;
+            $title .= ", Cor: " . $correct;
+            $title .= ", Incor: " . $incorrect;
 
             $response = [
                 'flashcards' => array_keys($flashcards[0]),
@@ -127,7 +131,7 @@ class FlashcardService extends BaseService
      * @param  int $flashcardId
      * @return array  $flashcard
      */
-    public function fetchFlashcardById(array $flashcards, int $flashcardId): array
+    public function getFlashcardById(array $flashcards, int $flashcardId): array
     {
         foreach ($flashcards as $flashcard) {
             if ($flashcard["id"] === $flashcardId) {
@@ -161,18 +165,6 @@ class FlashcardService extends BaseService
 
         return $is_correct;
     }
-
-    /**
-     * Fetch flashcard entity by Id
-     *
-     * @param  int $id
-     * @return array
-     */
-    public function fetchById($id): array
-    {
-        return Flashcard::find($id)->toArray();
-    }
-
 
     /**
      * Reset all answers of current active user

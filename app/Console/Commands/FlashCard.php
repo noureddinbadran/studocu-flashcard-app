@@ -126,12 +126,15 @@ class FlashCard extends Command
         $answer = $this->Input("Answer");
 
         // create a new flashcard
-        $this->flashcardService->create($question, $answer);
+        if($this->flashcardService->create($question, $answer))
+            $this->info("Flashcard created successfully");
+        else
+            $this->alert("Missing data ..");
     }
 
     private function getAllFlashcards()
     {
-        $flashcards = $this->flashcardService->fetch();
+        $flashcards = $this->flashcardService->getFlashcardsList();
 
         // check if flashcards are empty then restart process
         if (empty($flashcards)) {
@@ -151,7 +154,7 @@ class FlashCard extends Command
 
     private function practicing()
     {
-        $flashcards = $this->flashcardService->fetchStats($this->user->id);
+        $flashcards = $this->flashcardService->getStats($this->user->id);
 
         $dd = $this->flashcardService->showFlashcardsWithStats($flashcards);
 
@@ -186,7 +189,7 @@ class FlashCard extends Command
             "Enter flashcard id"
         );
 
-        $flashcard = $this->flashcardService->fetchFlashcardById(
+        $flashcard = $this->flashcardService->getFlashcardById(
             $flashcards,
             $flashcardId
         );
@@ -213,21 +216,21 @@ class FlashCard extends Command
     private function getStats()
     {
         // Get flashcard stats for this user
-        $flashcards = $this->flashcardService->fetchStats($this->user->id);
+        $flashcards = $this->flashcardService->getStats($this->user->id);
 
-        $dd = $this->flashcardService->showFlashcardsWithStats($flashcards);
+        $res = $this->flashcardService->showFlashcardsWithStats($flashcards);
 
-        if (is_array($dd)) {
+        if (is_array($res)) {
             $this->generateTable(
-                $dd['flashcards'],
-                $dd['flashcard'],
-                $dd["style"],
-                $dd['title']
+                $res['flashcards'],
+                $res['flashcard'],
+                $res["style"],
+                $res['title']
             );
         }
 
 
-        $this->info($dd['message']);
+        $this->info($res['message']);
     }
 
     private function reset()
